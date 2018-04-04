@@ -1,0 +1,10 @@
+{%  extends 'layout.html' %}
+
+{%  block body %}
+    <h1>{{ domain.title }}</h1>
+    <small>Written by {{ domain.author }} on {{ domain.createdate }}</small>
+    <hr>
+    <div>
+    {{ domain.body | safe }}
+    </div>
+{%  endblock %}

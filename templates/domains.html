@@ -1,0 +1,10 @@
+{%  extends 'layout.html' %}
+
+{%  block body %}
+    <h1>Domain</h1>
+    <ul class="list-group">
+        {% for domain in domains %}
+          <li class="list-group-item"><a href="domain/{{domain.id}}">{{domain.domain}}</a></li>
+        {% endfor %}
+    </ul>
+{%  endblock %}
