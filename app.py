@@ -1,5 +1,5 @@
 from flask import Flask, render_template, flash , redirect, url_for, session, request, logging
-from flask_mysqldb import MySQL
+from flask_mysqldb import MySQL, MySQLdb
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from functools import wraps
@@ -28,13 +28,15 @@ def is_logged_in(f):
             return redirect(url_for('login'))
     return wrap
 
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return redirect(url_for('dashboard'))
 
 # @app.route('/about')
 # def about():
 #     return render_template('about.html')
+
 
 @app.route('/domains')
 @is_logged_in
@@ -68,6 +70,7 @@ def domain(id):
     domain = cur.fetchone()
     return render_template('domain.html', domain=domain)
 
+
 # RegisterForm Class
 class RegisterForm(Form):
     name = StringField('Name', [validators.Length(min=1, max=50)])
@@ -78,6 +81,7 @@ class RegisterForm(Form):
         validators.EqualTo('confirm', message='Passwords do not match')
     ])
     confirm = PasswordField('Confirm Password')
+
 
 # User Register
 @app.route('/register', methods=['GET', 'POST'])
@@ -106,6 +110,7 @@ def regiser():
         return redirect(url_for('login'))
 
     return render_template('register.html', form=form)
+
 
 # User login
 @app.route('/login', methods=['GET', 'POST'])
@@ -143,12 +148,14 @@ def login():
             return render_template('login.html', error=error)
     return render_template('login.html')
 
+
 # Logout
 @app.route('/logout')
 def logout():
     session.clear()
     flash('You are now logged out', 'success')
     return redirect(url_for('login'))
+
 
 # Dashboard
 @app.route('/dashboard')
@@ -158,7 +165,7 @@ def dashboard():
     cur = mysql.connection.cursor()
 
     # Get articles
-    result = cur.execute("SELECT * FROM domains")
+    result = cur.execute("SELECT * FROM domains where delete_flag=0")
 
     domains = cur.fetchall()
 
@@ -169,7 +176,6 @@ def dashboard():
         return render_template('dashboard.html', msg=msg)
     # Close connection
     cur.close()
-
 
 
 # Domain Form Class
@@ -213,6 +219,7 @@ def add_doomain():
 
     return render_template('add_domain.html', form=form)
 
+
 # Edit Article
 @app.route('/edit_domain/<string:id>', methods=['GET', 'POST'])
 @is_logged_in
@@ -221,7 +228,7 @@ def edit_domain(id):
     cur = mysql.connection.cursor()
 
     # Get article by id
-    result = cur.execute("SELECT * FROM domains WHERE id = %s", [id])
+    result = cur.execute("SELECT * FROM domains WHERE id = %s and delete_flag=0", [id])
 
     domain = cur.fetchone()
 
@@ -261,6 +268,7 @@ def edit_domain(id):
 
     return render_template('edit_domains.html', form=form)
 
+
 # Delete Article
 @app.route('/delete_domain/<string:id>', methods=['POST'])
 @is_logged_in
@@ -269,7 +277,7 @@ def delete_domain(id):
     cur = mysql.connection.cursor()
 
     # Execute
-    cur.execute("DELETE FROM domains WHERE id =%s", [id])
+    cur.execute("UPDATE domains SET delete_flag=1 WHERE id =%s", [id])
 
     # Commit to DB
     mysql.connection.commit()
